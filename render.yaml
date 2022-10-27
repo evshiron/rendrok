@@ -1,0 +1,11 @@
+services:
+- type: web
+  name: rendrok
+  env: docker
+  repo: https://github.com/evshiron/rendrok
+  region: oregon
+  plan: free
+  branch: master
+  envVars:
+  - key: RENDROK_PASS
+    generateValue: true
