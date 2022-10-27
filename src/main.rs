@@ -1,3 +1,5 @@
+use std::io::ErrorKind;
+
 use clap::{Parser, Subcommand};
 
 mod config;
@@ -56,7 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     },
     Command::Ls {} => {
       let list_services = render_api::list_services().await;
-      println!("ID                       Name    Region        URL");
+      println!("{:24} {:12} {:12} {}", "ID", "Name", "Region", "URL");
       for list_service in list_services.as_array().unwrap() {
         if list_service["service"]["repo"]
           .as_str()
@@ -64,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
           .contains("evshiron/rendrok")
         {
           println!(
-            "{} {} {} {}",
+            "{:24} {:12} {:12} {}",
             list_service["service"]["id"].as_str().unwrap(),
             list_service["service"]["name"].as_str().unwrap(),
             list_service["service"]["serviceDetails"]["region"]
@@ -108,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
               let pass = list_env_var["envVar"]["value"].as_str().unwrap();
               let auth = format!("rendrok:{pass}");
 
-              std::process::Command::new("chisel")
+              match std::process::Command::new("chisel")
                 .args([
                   "client",
                   "--auth",
@@ -117,9 +119,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                   format!("R:127.0.0.1:3000:{host}:{port}").as_str(),
                 ])
                 .spawn()
-                .unwrap()
-                .wait_with_output()
-                .unwrap();
+              {
+                Ok(child) => {
+                  println!("\n==== {host}:{port} is now exposed on {service_url} ====\n");
+
+                  child.wait_with_output().unwrap();
+                },
+                Err(err) => {
+                  if err.kind() == ErrorKind::NotFound {
+                    println!("Serve failed: chisel is not found in $PATH.");
+                    println!("See https://github.com/evshiron/rendrok for details.");
+                  } else {
+                    panic!("{}", err);
+                  }
+                },
+              }
             }
           }
 
@@ -128,6 +142,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       }
 
       println!("Serve failed: service not found.");
+      println!("See https://github.com/evshiron/rendrok for details.");
     },
     Command::Logout {} => {
       let config = config::Config::default();
