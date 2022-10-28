@@ -24,7 +24,7 @@ Commands:
   login   Log in with render.com api key
   ls      List existing rendrok services
   rm      Remove a rendrok service
-  serve   Serve a port via a rendrok service
+  serve   Serve a port via rendrok service
   logout  Log out and clean up config
   help    Print this message or the help of the given subcommand(s)
 
