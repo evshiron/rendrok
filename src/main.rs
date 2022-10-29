@@ -1,9 +1,6 @@
 use std::io::ErrorKind;
 
 use clap::{Parser, Subcommand};
-use signal_hook::consts::{SIGINT, SIGQUIT, SIGTERM};
-
-use futures::stream::StreamExt;
 
 mod config;
 mod render_api;
@@ -169,32 +166,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(mut child) => {
                   println!("\n==== {host}:{port} is now exposed on {service_url} ====\n");
 
-                  let mut signals =
-                    signal_hook_tokio::Signals::new(&[SIGINT, SIGQUIT, SIGTERM]).unwrap();
-                  let handle = signals.handle();
-
                   loop {
                     tokio::select! {
                       _ = child.wait() => {
+                        println!("Chisel terminated.");
                         break;
                       },
-                      Some(signal) = signals.next() => {
-                        match signal {
-                          SIGINT | SIGQUIT | SIGTERM => {
-                            nix::sys::signal::kill(
-                              nix::unistd::Pid::from_raw(
-                                child.id().unwrap().try_into().unwrap()
-                              ),
-                              nix::sys::signal::Signal::SIGINT,
-                            ).unwrap();
-                          },
-                          _ => unreachable!(),
-                        }
+                      _ = tokio::signal::ctrl_c() => {
+                        child.start_kill().unwrap();
+                        println!("Signal received.");
                       },
                     }
                   }
-
-                  handle.close();
                 },
                 Err(err) => {
                   if err.kind() == ErrorKind::NotFound {
