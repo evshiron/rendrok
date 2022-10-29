@@ -65,7 +65,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     },
     Command::Ls {} => {
       let list_services = render_api::list_services().await;
-      println!("{:24} {:12} {:12} {}", "ID", "Name", "Region", "URL");
+      println!(
+        "{:24} {:16} {:12} {:12} {}",
+        "ID", "Name", "Region", "Active", "URL"
+      );
       for list_service in list_services.as_array().unwrap() {
         if list_service["service"]["repo"]
           .as_str()
@@ -73,12 +76,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
           .contains("evshiron/rendrok")
         {
           println!(
-            "{:24} {:12} {:12} {}",
+            "{:24} {:16} {:12} {:12} {}",
             list_service["service"]["id"].as_str().unwrap(),
             list_service["service"]["name"].as_str().unwrap(),
             list_service["service"]["serviceDetails"]["region"]
               .as_str()
               .unwrap(),
+            list_service["service"]["suspended"].as_str().unwrap() != "suspended",
             list_service["service"]["serviceDetails"]["url"]
               .as_str()
               .unwrap()
@@ -109,6 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
           .as_str()
           .unwrap()
           .contains("evshiron/rendrok")
+          && list_service["service"]["suspended"].as_str().unwrap() != "suspended"
         {
           let service_id = list_service["service"]["id"].as_str().unwrap();
 
