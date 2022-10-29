@@ -4,7 +4,7 @@
 
 ## Get Started
 
-If you don't have `chisel` installed already, it has an one-line script to [help you out](https://github.com/jpillora/chisel).
+If you don't have `chisel` installed already, follow the instructions in its [readme](https://github.com/jpillora/chisel).
 
 Click [here](https://render.com/deploy?repo=https://github.com/evshiron/rendrok) to deploy [chisel](https://github.com/jpillora/chisel) server on [render.com](https://render.com) with generated password, which `rendrok` will obtain via [render.com](https://render.com) API.
 
